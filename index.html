@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JLPT Choukai & Dokkai Flashcards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-2: #243044;
+      --border: #2d3a4f;
+      --text: #e8eef7;
+      --text-muted: #8b9bb4;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --card-front: linear-gradient(145deg, #1e3a5f 0%, #0f2744 100%);
+      --card-back: linear-gradient(145deg, #1a3a2f 0%, #0f2920 100%);
+      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      --radius: 16px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --surface-2: #e8eef5;
+      --border: #d0dbe8;
+      --text: #1a2332;
+      --text-muted: #5a6b82;
+      --card-front: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
+      --card-back: linear-gradient(145deg, #d1fae5 0%, #a7f3d0 100%);
+      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", "Noto Sans JP", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-top: 1rem;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+
+    header h1 span {
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1.75rem;
+      padding: 1rem;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .toolbar label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    select, button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select:hover, button:hover {
+      border-color: var(--accent);
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+
+    button.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .theme-toggle {
+      margin-left: auto;
+    }
+
+    /* Card area */
+    .card-area {
+      perspective: 1200px;
+      min-height: 340px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .flashcard {
+      width: 100%;
+      max-width: 520px;
+      height: 320px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.4, 0.0, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .card-front {
+      background: var(--card-front);
+    }
+
+    .card-back {
+      background: var(--card-back);
+      transform: rotateY(180deg);
+    }
+
+    .word {
+      font-family: "Noto Sans JP", sans-serif;
+      font-size: 2.75rem;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .reading {
+      font-family: "Noto Sans JP", sans-serif;
+      font-size: 1.35rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .meaning {
+      font-size: 1.25rem;
+      text-align: center;
+      margin-top: 1rem;
+      max-width: 90%;
+      line-height: 1.45;
+    }
+
+    .pos-tag {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+    }
+
+    [data-theme="light"] .pos-tag {
+      color: #1d4ed8;
+      background: rgba(59, 130, 246, 0.12);
+    }
+
+    .example {
+      margin-top: 1.25rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 95%;
+      line-height: 1.5;
+    }
+
+    .example .ja {
+      font-family: "Noto Sans JP", sans-serif;
+      color: var(--text);
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .hint {
+      position: absolute;
+      bottom: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .controls button {
+      min-width: 100px;
+      padding: 0.65rem 1rem;
+      font-weight: 500;
+    }
+
+    .btn-know {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+    }
+
+    .btn-know:hover {
+      background: rgba(34, 197, 94, 0.25);
+    }
+
+    .btn-again {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+
+    .btn-again:hover {
+      background: rgba(245, 158, 11, 0.25);
+    }
+
+    /* Progress */
+    .progress-bar-wrap {
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      border-radius: 999px;
+      transition: width 0.35s ease;
+      width: 0%;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Loading / empty */
+    .status-msg {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* Keyboard hint */
+    .kbd-hint {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      opacity: 0.8;
+    }
+
+    kbd {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
+      font-size: 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface-2);
+      font-family: inherit;
+    }
+
+    @media (max-width: 560px) {
+      .word { font-size: 2.1rem; }
+      .flashcard { height: 280px; }
+      .controls button { min-width: 80px; font-size: 0.85rem; }
+      header h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><span>JLPT</span> Choukai & Dokkai Flashcards</h1>
+      <p>Vocabulary for listening (聴解) and reading (読解) comprehension</p>
+    </header>
+
+    <div class="toolbar">
+      <div>
+        <label for="level">Level</label><br />
+        <select id="level">
+          <option value="n5">N5 · Beginner</option>
+          <option value="n4">N4 · Elementary</option>
+          <option value="n3" selected>N3 · Intermediate</option>
+          <option value="n2">N2 · Upper Intermediate</option>
+          <option value="n1">N1 · Advanced</option>
+        </select>
+      </div>
+      <div>
+        <label for="mode">Mode</label><br />
+        <select id="mode">
+          <option value="ja-en">JP → EN (Reading)</option>
+          <option value="en-ja">EN → JP</option>
+          <option value="reading">Reading → Meaning</option>
+        </select>
+      </div>
+      <button id="shuffleBtn" title="Shuffle deck">🔀 Shuffle</button>
+      <button id="resetProgress" title="Reset known cards for this level">↺ Reset</button>
+      <button class="theme-toggle" id="themeBtn" title="Toggle theme">🌙</button>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="stats">
+      <span id="cardCounter">—</span>
+      <span id="knownStat">Known: 0</span>
+    </div>
+
+    <div class="card-area" id="cardArea">
+      <div class="status-msg" id="statusMsg">
+        <div class="spinner"></div>
+        Loading vocabulary…
+      </div>
+    </div>
+
+    <div class="controls" id="controls" style="display:none;">
+      <button id="prevBtn">← Prev</button>
+      <button id="flipBtn" class="primary">Flip</button>
+      <button id="nextBtn">Next →</button>
+      <button id="againBtn" class="btn-again">Again</button>
+      <button id="knowBtn" class="btn-know">Know ✓</button>
+    </div>
+
+    <p class="kbd-hint">
+      <kbd>Space</kbd> / <kbd>Enter</kbd> flip ·
+      <kbd>←</kbd> <kbd>→</kbd> navigate ·
+      <kbd>1</kbd> Again · <kbd>2</kbd> Know
+    </p>
+  </div>
+
+  <footer>
+    Vocabulary data from <a href="https://github.com/evanclan/OpenJLPT" target="_blank" rel="noopener">OpenJLPT</a>
+    (CC BY-SA 4.0) · Optimized for Choukai & Dokkai practice
+  </footer>
+
+  <script>
+    const CDN = "https://cdn.jsdelivr.net/gh/evanclan/OpenJLPT@main/data/json/vocab/";
+    const STORAGE_KEY = "jlpt-flashcards-progress-v1";
+
+    let deck = [];
+    let currentIndex = 0;
+    let known = new Set();
+    let isFlipped = false;
+    let currentLevel = "n3";
+
+    // DOM
+    const levelSelect = document.getElementById("level");
+    const modeSelect = document.getElementById("mode");
+    const cardArea = document.getElementById("cardArea");
+    const statusMsg = document.getElementById("statusMsg");
+    const controls = document.getElementById("controls");
+    const progressBar = document.getElementById("progressBar");
+    const cardCounter = document.getElementById("cardCounter");
+    const knownStat = document.getElementById("knownStat");
+    const themeBtn = document.getElementById("themeBtn");
+
+    // Theme
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      themeBtn.textContent = theme === "light" ? "☀️" : "🌙";
+      localStorage.setItem("jlpt-theme", theme);
+    }
+    const savedTheme = localStorage.getItem("jlpt-theme") || "dark";
+    applyTheme(savedTheme);
+    themeBtn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      applyTheme(next);
+    });
+
+    // Progress persistence
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return {};
+        return JSON.parse(raw);
+      } catch {
+        return {};
+      }
+    }
+    function saveProgress() {
+      const all = loadProgress();
+      all[currentLevel] = Array.from(known);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    }
+    function loadKnownForLevel(level) {
+      const all = loadProgress();
+      known = new Set(all[level] || []);
+    }
+
+    // Fetch vocab
+    async function loadLevel(level) {
+      currentLevel = level;
+      cardArea.innerHTML = `<div class="status-msg"><div class="spinner"></div>Loading ${level.toUpperCase()} vocabulary…</div>`;
+      controls.style.display = "none";
+
+      try {
+        const res = await fetch(`${CDN}${level}.json`);
+        if (!res.ok) throw new Error("Network error");
+        const data = await res.json();
+
+        // Normalize
+        deck = data.map((item) => ({
+          id: item.id,
+          word: item.word,
+          reading: item.reading,
+          romaji: item.romaji || "",
+          meanings: (item.meanings || []).join("; "),
+          pos: (item.pos || []).slice(0, 3).join(", "),
+          example: item.examples && item.examples[0]
+            ? { ja: item.examples[0].ja, en: item.examples[0].en }
+            : null,
+        }));
+
+        // Filter out cards already marked known if desired — we keep them but track
+        loadKnownForLevel(level);
+        currentIndex = 0;
+        isFlipped = false;
+        shuffleDeck(false); // start unshuffled or keep order; user can shuffle
+        renderCard();
+        controls.style.display = "flex";
+        updateStats();
+      } catch (err) {
+        cardArea.innerHTML = `<div class="status-msg">Failed to load vocabulary.<br/>Check your connection and try again.<br/><small>${err.message}</small></div>`;
+      }
+    }
+
+    function shuffleDeck(resetIndex = true) {
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      if (resetIndex) {
+        currentIndex = 0;
+        isFlipped = false;
+      }
+      renderCard();
+      updateStats();
+    }
+
+    function getFrontBack(card) {
+      const mode = modeSelect.value;
+      if (mode === "ja-en") {
+        return {
+          front: card.word,
+          frontSub: null,
+          backMain: card.reading,
+          backSub: card.meanings,
+          showExample: true,
+        };
+      }
+      if (mode === "en-ja") {
+        return {
+          front: card.meanings,
+          frontSub: null,
+          backMain: card.word,
+          backSub: card.reading,
+          showExample: true,
+        };
+      }
+      // reading
+      return {
+        front: card.reading,
+        frontSub: null,
+        backMain: card.word,
+        backSub: card.meanings,
+        showExample: true,
+      };
+    }
+
+    function renderCard() {
+      if (!deck.length) {
+        cardArea.innerHTML = `<div class="status-msg">No cards available.</div>`;
+        return;
+      }
+      const card = deck[currentIndex];
+      const { front, frontSub, backMain, backSub, showExample } = getFrontBack(card);
+
+      const exampleHtml =
+        showExample && card.example
+          ? `<div class="example"><span class="ja">${escapeHtml(card.example.ja)}</span>${escapeHtml(card.example.en || "")}</div>`
+          : "";
+
+      cardArea.innerHTML = `
+        <div class="flashcard ${isFlipped ? "flipped" : ""}" id="flashcard" role="button" tabindex="0" aria-label="Flashcard, click to flip">
+          <div class="card-face card-front">
+            <div class="word">${escapeHtml(front)}</div>
+            ${frontSub ? `<div class="reading">${escapeHtml(frontSub)}</div>` : ""}
+            <div class="hint">Click or press Space to flip</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="word">${escapeHtml(backMain)}</div>
+            <div class="meaning">${escapeHtml(backSub)}</div>
+            ${card.pos ? `<span class="pos-tag">${escapeHtml(card.pos)}</span>` : ""}
+            ${exampleHtml}
+          </div>
+        </div>
+      `;
+
+      const el = document.getElementById("flashcard");
+      el.addEventListener("click", flip);
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          flip();
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function flip() {
+      isFlipped = !isFlipped;
+      const el = document.getElementById("flashcard");
+      if (el) el.classList.toggle("flipped", isFlipped);
+    }
+
+    function go(delta) {
+      currentIndex = (currentIndex + delta + deck.length) % deck.length;
+      isFlipped = false;
+      renderCard();
+      updateStats();
+    }
+
+    function markKnow() {
+      const id = deck[currentIndex].id;
+      known.add(id);
+      saveProgress();
+      // optional: move to next
+      go(1);
+      updateStats();
+    }
+
+    function markAgain() {
+      // just go next, keep in deck
+      go(1);
+    }
+
+    function updateStats() {
+      const total = deck.length;
+      const knownCount = known.size;
+      cardCounter.textContent = total
+        ? `Card ${currentIndex + 1} / ${total}`
+        : "—";
+      knownStat.textContent = `Known: ${knownCount}`;
+      const pct = total ? Math.round((knownCount / total) * 100) : 0;
+      progressBar.style.width = `${pct}%`;
+    }
+
+    // Event listeners
+    levelSelect.addEventListener("change", () => loadLevel(levelSelect.value));
+    modeSelect.addEventListener("change", () => {
+      isFlipped = false;
+      renderCard();
+    });
+    document.getElementById("shuffleBtn").addEventListener("click", () => shuffleDeck(true));
+    document.getElementById("resetProgress").addEventListener("click", () => {
+      if (confirm(`Reset all known cards for ${currentLevel.toUpperCase()}?`)) {
+        known.clear();
+        saveProgress();
+        updateStats();
+      }
+    });
+    document.getElementById("prevBtn").addEventListener("click", () => go(-1));
+    document.getElementById("nextBtn").addEventListener("click", () => go(1));
+    document.getElementById("flipBtn").addEventListener("click", flip);
+    document.getElementById("knowBtn").addEventListener("click", markKnow);
+    document.getElementById("againBtn").addEventListener("click", markAgain);
+
+    // Keyboard
+    document.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") return;
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          go(-1);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          go(1);
+          break;
+        case " ":
+        case "Enter":
+          e.preventDefault();
+          flip();
+          break;
+        case "1":
+          markAgain();
+          break;
+        case "2":
+          markKnow();
+          break;
+      }
+    });
+
+    // Init
+    loadLevel(levelSelect.value);
+  </script>
+</body>
+</html>
